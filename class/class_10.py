@@ -22,7 +22,7 @@ c=[7,5,6,3,1]
 #排序.sort
 c.sort()
 print(c)
-#到装reverse
+#倒装reverse
 c.reverse()
 print(c)
 
