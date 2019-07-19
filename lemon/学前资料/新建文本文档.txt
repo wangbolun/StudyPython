@@ -1,0 +1,126 @@
+[root@localhost bin]# cat trunk_maven.sh 
+#定义相关变量
+tomcat_name=tomcat-srpcn-api
+project_path=/home/work/svnroot/maven/trunk/srpcn
+project_target_file=srpcn-api
+common_file=srpcn-common
+service_file=srpcn-core-service
+fz_path=trunk
+parent_name=srpcn-parent
+
+
+#判断是否有主干版本
+cd ${project_path}/
+if [[ ! -d ${parent_name} ]];then
+	svn co --username lina --password lina869 http://192.168.1.189/svn/ecommerce/trunk/srpcn/${parent_name}
+	echo svn co ${parent_name}
+else
+	#更新parent(父类）
+	cd ${project_path}/${parent_name}
+	svn up
+	echo svn up ${parent_name}
+
+fi
+
+
+
+#更新common
+cd ${project_path}/${parent_name}/${common_file}
+mvn clean 
+mvn install
+echo ${common_file} '=================================================================================================> mvn install success'
+
+
+
+#更新service
+cd ${project_path}/${parent_name}/${service_file}
+mvn clean 
+mvn install
+echo ${service_file} '=================================================================================================> mvn install success'
+
+
+
+#更api
+
+#删除old的war包
+cd ${project_path}/${parent_name}/${project_target_file}
+mvn clean
+
+#编译、打包并重命名war包
+mvn install -Dmaven.test.skip=true -U -Pqa
+cd ${project_path}/${parent_name}/${project_target_file}/target/
+mv ${project_target_file}.war ROOT.war
+
+
+
+#start,查询当前tomcat进程,并kill掉
+tomcat_id=$(ps -efww|grep -w ${tomcat_name}|grep -v grep|cut -c 9-15)
+echo ${tomcat_name} 进程ID：${tomcat_id}
+
+if [[ ! ${tomcat_id} == '' ]];then
+	kill -9 ${tomcat_id}
+	echo 服务已经被关闭成功！
+else
+	echo ${tomcat_name} 服务没有启动，正在重新！！！！！
+fi
+
+
+#删除项目
+cd /data/${tomcat_name}/webapps
+echo 当前目录为 $`pwd`
+rm -rf *
+echo ${tomcat_name}/webapps 下文件已删除
+
+
+#删除缓存
+cd /data/${tomcat_name}/work
+echo 当前路径: $`pwd`
+rm -rf *
+echo ${tomcat_name}/work 下缓存已删除
+
+
+#删除logs目录
+cd /data/${tomcat_name}/logs
+echo 当前路径：$`pwd`  
+rm -rf *
+echo ${tomcat_name}/logs目录下所有文件已删除
+
+
+#进入target路径下，将war包拷贝到webapps下面
+cd ${project_path}/${parent_name}/${project_target_file}/target/
+cp ROOT.war /data/${tomcat_name}/webapps
+
+
+
+#启动tomcat
+cd /data/${tomcat_name}/bin/
+echo 当前目录为 $`pwd`
+
+
+#启动服务
+./startup.sh
+echo "服务正在启动~~~~~"
+
+
+#把更新记录写到log.txt中
+cd /data/${tomcat_name}/bin
+
+#判断是否有log.txt文件
+if [ ! -f "log.txt" ];then
+	touch log.txt
+fi
+
+echo 更新程序 >> /data/${tomcat_name}/bin/log.txt
+echo `date "+%Y-%m-%d %H:%M:%S"` >> /data/${tomcat_name}/bin/log.txt
+echo 当前路径是：${fz_path} >> /data/${tomcat_name}/bin/log.txt
+echo 当前版本：${parent_name} >> /data/${tomcat_name}/bin/log.txt
+echo "=======================================================================>" >> /data/${tomcat_name}/bin/log.txt
+
+
+
+#"开始查看实时日志"
+cd /data/${tomcat_name}/logs
+tail -f catalina.out
+echo "update sussess~:)"
+fi
+[root@localhost bin]# 
