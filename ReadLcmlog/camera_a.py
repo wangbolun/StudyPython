@@ -10,9 +10,11 @@ import lcm
 import matplotlib.pyplot as plt
 import numpy as np
 from lcmtypes import *
+import math
 
 camera_time = []
 camera_a = []
+camera_ja = []
 
 
 class read_lcmlog():
@@ -50,14 +52,12 @@ class read_lcmlog():
         #        input_values = [1,2,3,4,5]
         #        plt.plot(input_values,squares,linewidth=5)
         plt.figure(num=3, figsize=(8, 5))
-        # plt.annotate('Important valulihdiauhhihe', (4.8, 85))
-        # plt.annotate('shis is the bootm',  xy = (0, 0), xytext = (0, 0))
-        #        plt.text(5.4, 84, "kalsjdlakjldjasda")
-        plt.plot(camera_time, camera_a, label='Actual_Speed')
+        plt.plot(camera_time, camera_a, label='deviation')
         plt.legend()
+        
         # 插入平均值
         plt.text(np.mean(camera_time), np.mean(camera_a),
-                 ' Average {:.2f} m \nmax{:.2f} m'.format(average_a, max(camera_a)), family='fantasy',
+                 ' Average {:.2f} m \nmax{:.2f} m\nmin{:.2f}'.format(average_a, max(camera_a),min(camera_a)), family='fantasy',
                  fontsize=16, style='italic', color='mediumvioletred')
         # 自动保存图片
         plt.savefig('./{}deviation.jpg'.format(name))
